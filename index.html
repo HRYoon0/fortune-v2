@@ -11,6 +11,7 @@
   <div>
     <img src="./images/main.png">
   </div>
+
   <form id="fortune-form">
     <label for="name">이름</label>
     <input type="text" id="name" name="name" required />
@@ -32,40 +33,37 @@
 
       const name = document.getElementById("name").value;
       const birth = document.getElementById("birth").value;
-      
+
       resultDiv.textContent = "운세를 불러오는 중입니다...";
 
       try {
-        // !!! 중요: 아래 URL을 선생님께서 배포한 Google Apps Script 웹 앱 URL로 변경해주세요 !!!
-        const APPS_SCRIPT_WEB_APP_URL = "https://my-fortune-api.tmdsh2000.workers.dev"; 
+        const API_URL = "https://my-fortune-api.tmdsh2000.workers.dev";
 
-        const response = await fetch(APPS_SCRIPT_WEB_APP_URL, { // Apps Script URL로 변경
+        const response = await fetch(API_URL, {
           method: "POST",
-          // Apps Script는 기본적으로 Content-Type을 application/x-www-form-urlencoded로 기대할 수 있으나,
-          // doPost(e)에서 JSON.parse(e.postData.contents)를 사용하므로 JSON으로 보냅니다.
-          // 다만, Apps Script가 이를 올바르게 받으려면 약간의 조정이 필요할 수 있습니다.
-          // 가장 간단한 방법은 일반 텍스트로 보내고 Apps Script에서 JSON.parse() 하는 것입니다.
-          // 또는, 아래 headers를 명시적으로 보내는 대신, body만 JSON 문자열로 보냅니다.
-          // body: JSON.stringify({ name, birth }) 만으로도 Apps Script의 e.postData.contents로 잘 전달됩니다.
           headers: {
-             "Content-Type": "application/json", // 이 헤더를 보내면 Apps Script는 e.postData.type을 "application/json"으로 인식
+            "Content-Type": "application/json"
           },
-          body: JSON.stringify({ name, birth }),
+          body: JSON.stringify({ name, birth })
         });
 
-        const data = await response.json(); // Apps Script가 JSON 형태로 응답한다고 가정
+        const data = await response.json();
 
-        if (data.answer) { // Apps Script 응답이 {answer: "운세 내용"} 형태일 경우
+        // 🔍 디버깅용 콘솔 출력
+        console.log("✅ 전체 응답:", data);
+        console.log("📦 Gemini API 상태 코드:", data.debug?.status);
+        console.log("🧠 Gemini 응답 원본:", data.debug?.raw);
+
+        if (data.answer) {
           resultDiv.textContent = data.answer;
         } else if (data.error) {
           resultDiv.textContent = `오류: ${data.error} ${data.details ? '(' + data.details + ')' : ''}`;
         } else {
-          // 예상치 못한 응답 형식
-           resultDiv.textContent = "알 수 없는 응답을 받았습니다.";
+          resultDiv.textContent = "알 수 없는 응답을 받았습니다.";
         }
       } catch (err) {
         resultDiv.textContent = "서버와 통신 중 오류가 발생했습니다.";
-        console.error(err);
+        console.error("❌ 네트워크 오류 또는 예외:", err);
       }
     });
   </script>
